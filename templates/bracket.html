@@ -1,0 +1,99 @@
+<!-- templates/bracket.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div style="margin-bottom: 20px;">
+    <h1>Tournament Bracket</h1>
+    {% if tournament.is_locked %}
+        <div style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 20px;">
+            <strong>Tournament is locked!</strong> Picks can no longer be changed.
+        </div>
+    {% endif %}
+</div>
+
+<div class="bracket-container" style="overflow-x: auto; white-space: nowrap;">
+    <div style="display: inline-flex; gap: 20px;">
+        {% for round_num in range(1, 8) %}
+            <div class="round-column" style="min-width: 200px;">
+                <h3 style="text-align: center; margin-bottom: 20px;">
+                    Round {{ round_num }}
+                    {% if round_num == 1 %}(R1)
+                    {% elif round_num == 2 %}(R2)
+                    {% elif round_num == 3 %}(R3)
+                    {% elif round_num == 4 %}(R4)
+                    {% elif round_num == 5 %}(QF)
+                    {% elif round_num == 6 %}(SF)
+                    {% elif round_num == 7 %}(F)
+                    {% endif %}
+                </h3>
+                
+                {% for match in matches_by_round[round_num] %}
+                    <div class="match" style="margin-bottom: 20px; background: white; border-radius: 4px; padding: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                            <div class="match-players">
+                                <div class="player-option" style="padding: 8px; margin: 2px 0; border: 1px solid #ddd; border-radius: 3px; cursor: pointer; 
+                                    {% if user_picks.get(match.id) == match.player1_id %}background-color: #d4edda; border-color: #28a745;{% endif %}"
+                                    onclick="makePick({{ match.id }}, {{ match.player1_id }})">
+                                    {% if match.player1_id %}
+                                    {{ players[match.player1_id].name }}
+                                    {% endif %}
+                                </div>
+                                <div style="text-align: center; font-size: 12px; color: #666; margin: 5px 0;">vs</div>
+                                <div class="player-option" style="padding: 8px; margin: 2px 0; border: 1px solid #ddd; border-radius: 3px; cursor: pointer;
+                                    {% if user_picks.get(match.id) == match.player2_id %}background-color: #d4edda; border-color: #28a745;{% endif %}"
+                                    onclick="makePick({{ match.id }}, {{ match.player2_id }})">
+                                    {% if match.player2_id %}
+                                    {{ players[match.player2_id].name }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .player-option:hover {
+        background-color: #e9ecef !important;
+    }
+    .bracket-container {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+</style>
+
+<script>
+function makePick(matchId, winnerId) {
+    {% if tournament.is_locked %}
+        alert('Tournament is locked! Picks can no longer be changed.');
+        return;
+    {% endif %}
+
+    fetch('/make_pick', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            match_id: matchId,
+            winner_id: winnerId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload(); // Refresh to show updated picks
+        } else {
+            alert('Error making pick: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error making pick');
+    });
+}
+</script>
+{% endblock %}

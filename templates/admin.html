@@ -1,0 +1,54 @@
+<!-- templates/admin.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-panel">
+    <h1>Admin Panel</h1>
+    
+    <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <h2>Tournament Status</h2>
+        <p><strong>Status:</strong> {% if tournament.is_locked %}Locked{% else %}Open{% endif %}</p>
+        <form method="POST" action="{{ url_for('lock_tournament') }}" style="display: inline;">
+            <button type="submit" class="btn {% if tournament.is_locked %}btn-danger{% endif %}">
+                {% if tournament.is_locked %}Unlock Tournament{% else %}Lock Tournament{% endif %}
+            </button>
+        </form>
+    </div>
+
+    <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <h2>Set Players</h2>
+        <form method="POST" action="{{ url_for('set_players') }}">
+            <p>Enter 128 player names (one per line):</p>
+            <textarea name="player_names" rows="10" style="width: 100%; font-family: monospace;" placeholder="Player 1&#10;Player 2&#10;Player 3&#10;...">{% for player in players %}{{ player.name }}
+{% endfor %}</textarea>
+            <br><br>
+            <button type="submit" class="btn">Set Players</button>
+        </form>
+
+
+        {% if players %}
+        <h3>Current Players ({{ players|length }}/128)</h3>
+        <div style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-top: 10px;">
+            {% for player in players %}
+                <div style="margin: 2px 0;">({{ player.seed }}) {{ player.name }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Auto-generate sample player names for testing
+document.addEventListener('DOMContentLoaded', function() {
+    const textarea = document.querySelector('textarea[name="player_names"]');
+    if (textarea.value.trim() === '') {
+        let players = [];
+        for (let i = 1; i <= 128; i++) {
+            players.push(`Team ${i}`);
+        }
+        textarea.value = players.join('\n');
+    }
+});
+</script>
+{% endblock %}
+</content>
